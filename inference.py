@@ -29,8 +29,7 @@ class BeeNet:
         img = np.reshape(img, (256, 256, 1))
         return img
 
-    def infer(self, file):
-        img = cv2.imread(file, 0)
+    def infer(self, img):
         img = cv2.resize(img, (256, 256))
         img = self.transform(img)
 

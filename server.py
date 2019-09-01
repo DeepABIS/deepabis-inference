@@ -1,5 +1,10 @@
+import io
 import socket
 import threading
+
+import cv2
+import numpy as np
+
 from inference import BeeNet
 import json
 
@@ -17,18 +22,27 @@ class InferenceThread(threading.Thread):
     def run(self):
         while True:
             try:
-                data = self.connection.recv(1024)  # receive data to connected client (blocking)
-
-                if data:
-                    print('Client sent: "%s"' % (data))
-                    data = data.decode()
-                    path = '../storage/python/predict/' + data
-                    top5 = self.net.infer_top5(path)
-                    response = json.dumps({
-                        'top5': top5.tolist(),
-                        'embedding': self.net.embedding,
-                    })
+                f = io.BytesIO()
+                length = self.connection.recv(8)
+                length = int.from_bytes(length, "big")
+                b = 0
+                while b < length:
+                    to_read = length - b
+                    data = self.connection.recv(1024 if to_read > 1024 else to_read)
+                    if not data:
+                        break
+                    b += len(data)
+                    f.write(data)
+                f.seek(0)
+                file_bytes = np.asarray(bytearray(f.read()), dtype=np.uint8)
+                img = cv2.imdecode(file_bytes, cv2.IMREAD_GRAYSCALE)
+                top5 = self.net.infer_top5(img)
+                response = json.dumps({
+                    'top5': top5.tolist(),
+                    'embedding': self.net.embedding,
+                })
                 self.connection.sendall(response.encode())  # send data to connected client
+                self.connection.close()
             except socket.error as msg:
                 print("Client disconnected")
                 self.connection.close()  # close the socket connection

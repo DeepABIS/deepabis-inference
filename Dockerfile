@@ -7,9 +7,12 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install --upgrade pip
 
-ADD requirements.txt requirements.txt
+WORKDIR /app
+COPY . /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
 
 CMD ["python", "server.py"]
+
+EXPOSE 9042

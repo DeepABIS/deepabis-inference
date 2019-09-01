@@ -6,7 +6,7 @@ from keras.utils import CustomObjectScope
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 
-path = '../storage/python/'
+path = './'
 
 
 def relu6(x):
